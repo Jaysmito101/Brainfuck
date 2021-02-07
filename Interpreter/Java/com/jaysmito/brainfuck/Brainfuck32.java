@@ -5,15 +5,19 @@ import java.io.*;
 
 public class Brainfuck32{
 	private String code;
+	private boolean embrk;
 	private ArrayList<Integer> memory;
-	private int ptr;
+	private int ptr, iptr;
 	private int maxMem;
 	private OutputStream outStream;
 	private InputStream inStream;
 	private PrintStream writter;
+	private boolean isComment = false;
 
 	public Brainfuck32(String code){
 		this.code = code;
+		this.embrk=false;
+		this.code = code.trim() + "    ";
 		this.ptr = 0;
 		this.maxMem = 30000;
 		this.memory = new ArrayList<Integer>(maxMem);
@@ -24,7 +28,10 @@ public class Brainfuck32{
 
 	public Brainfuck32(String code, int maxMem){
 		this.code = code;
+		this.code = code.trim() + "    ";
 		this.ptr = 0;
+		this.embrk=false;
+		this.iptr = 0;
 		this.memory = new ArrayList<Integer>(maxMem);
 		this.maxMem = maxMem;
 		this.outStream = System.out;
@@ -34,6 +41,9 @@ public class Brainfuck32{
 
 	public Brainfuck32(String code, InputStream inStream, OutputStream outStream){
 		this.code = code;
+		this.code = code.trim() + "    ";
+		this.iptr = 0;
+		this.embrk=false;
 		this.ptr = 0;
 		this.maxMem = 30000;
 		this.memory = new ArrayList<Integer>(maxMem);
@@ -44,6 +54,9 @@ public class Brainfuck32{
 
 	public Brainfuck32(String code, int maxMem, InputStream inStream, OutputStream outStream){
 		this.code = code;
+		this.code = code.trim() + "    ";
+		this.embrk=false; 
+		this.iptr = 0;
 		this.ptr = 0;
 		this.memory = new ArrayList<Integer>(maxMem);
 		this.maxMem = maxMem;
@@ -60,22 +73,26 @@ public class Brainfuck32{
 	}
 
 	public String getCode(){
-		return this.code;
+		return this.code.trim();
 	}
 
 	public void execute(){
 		memory.add(0);
-		char instruction;
-		boolean isComment = false;
-		code = code.trim() + " ";
-		for(int i = 0 ; i < code.length() - 1 ; i++){
-			instruction = code.charAt(i);
-			if(instruction == '\\' && code.charAt(i+1) == '\\')
+		next();
+	}
+
+	private void next(){
+		try{
+			char instruction;
+			instruction = code.charAt(iptr);
+			if(instruction == '\\' && code.charAt(iptr+1) == '\\')
 				isComment = true;
 			if(instruction == '\n')
 				isComment = false;
-			if(isComment)
-				continue;
+			if(isComment){
+				iptr++;
+				next();
+			}
 			switch(instruction){
 				case '+':
 				plus();
@@ -104,8 +121,16 @@ public class Brainfuck32{
 				default:
 				break;
 			}
+			iptr++;
+			if(iptr <= code.length()-1 && !embrk){
+				next();
+			}
+		}catch(StackOverflowError err){
+			if(embrk)
+				return;
+			writter.println("Stack Overflow Error.\n");
+			embrk = true;
 		}
-		code = code.trim();
 	}
 
 	private void plus(){
@@ -176,7 +201,42 @@ public class Brainfuck32{
 		}
 	}
 
-	private void lopen(){}
+	private void lopen(){
+		try{
+			if(Integer.valueOf(memory.get(ptr)) == 0){
+				int nxtptr = code.indexOf(']', iptr);
+				if(nxtptr == -1){
+					writter.println("Mismatching [].");
+					System.exit(-1);
+				}
+				else{
+					iptr = nxtptr;
+				}
+			}
+		}catch(Exception ex){
+			writter.println("Error in reading form memory.");
+			System.exit(-1);
+		}
+	}
 
-	private void lclose(){}
+	private void lclose(){
+		try{
+			if(Integer.valueOf(memory.get(ptr)) != 0){
+				int nxtptr = iptr;
+				for(int i = iptr ; i>= 0 ; i--){
+					if(code.charAt(i) == '['){
+						iptr = i;
+						break;
+					}
+				}
+				if(nxtptr == iptr){
+					writter.println("Mismatching [].");
+					System.exit(-1);
+				}
+			}
+		}catch(Exception ex){
+			writter.println("Error in reading form memory.");
+			System.exit(-1);
+		}
+	}
 }

@@ -1,0 +1,1 @@
+from pyfuck.Brainfuck import Brainfuck

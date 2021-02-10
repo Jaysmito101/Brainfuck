@@ -2,13 +2,13 @@ from distutils.core import setup
 setup(
   name = 'pyfuck',
   packages = ['pyfuck'],
-  version = '0.1',
+  version = '0.2',
   license='MIT',
   description = 'Python Brainfuck Implementation to Execute as well as Convert Brainfuck Code',
   author = 'Jaysmito Mukherjee',
   author_email = 'jaysmito101@gmail.com',
   url = 'https://github.com/Jaysmito101/Brainfuck/tree/main/Python/pyfuck',
-  download_url = '',
+  download_url = 'https://github.com/Jaysmito101/PyFuck/archive/v_01.tar.gz',
   keywords = ['brainfuck', 'interpreter', 'code-converter'],
   install_requires=[
           'numpy',
